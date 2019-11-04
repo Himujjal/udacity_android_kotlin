@@ -16,8 +16,10 @@
 
 package com.example.android.dessertpusher
 
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -27,16 +29,22 @@ import androidx.core.app.ShareCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.LifecycleObserver
 import com.example.android.dessertpusher.databinding.ActivityMainBinding
+import timber.log.Timber
+import java.util.*
 
 class MainActivity : AppCompatActivity(), LifecycleObserver {
 
     // companion class
-    private companion object TAG {
-        val tag = "MainActivity"
+    private companion object {
+        const val TAG = "MainActivity"
+        const val KEY_REVENUE = "key_revenue"
+        const val KEY_DESSERT_SOLD = "key_dessert_sold"
+        const val KEY_DESSERT_TIMER = "key_dessert_timer"
     }
 
     private var revenue = 0
     private var dessertsSold = 0
+    private lateinit var dessertTimer: DessertTimer
 
     // Contains all the views
     private lateinit var binding: ActivityMainBinding
@@ -68,11 +76,18 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
     )
     private var currentDessert = allDesserts[0]
 
+    @SuppressLint("TimberArgCount")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dessertTimer = DessertTimer(this.lifecycle)
 
-        Log.i(TAG.tag, "On Create Called")
-        
+        if (savedInstanceState != null) {
+            revenue = savedInstanceState.getInt(KEY_REVENUE)
+            dessertsSold = savedInstanceState.getInt(KEY_DESSERT_SOLD)
+            dessertTimer.secondsCount = savedInstanceState.getInt(KEY_DESSERT_TIMER)
+        }
+
+        Timber.i("------------- onCreate Called ------------------")
 
         // Use Data Binding to get reference to the views
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
@@ -80,6 +95,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
         binding.dessertButton.setOnClickListener {
             onDessertClicked()
         }
+
 
         // Set the TextViews to the right values
         binding.revenue = revenue
@@ -144,6 +160,19 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        Timber.i("------ onSaveInstanceState called ----------")
+        outState?.putInt(KEY_DESSERT_TIMER, dessertTimer.secondsCount)
+        outState?.putInt(KEY_REVENUE, revenue)
+        outState?.putInt(KEY_DESSERT_SOLD, dessertsSold)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+//        this gets fired after onStart is called
+        super.onRestoreInstanceState(savedInstanceState)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
         return super.onCreateOptionsMenu(menu)
@@ -154,5 +183,36 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
             R.id.shareMenuButton -> onShare()
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Timber.i("------ on Start called ----------")
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Timber.i("------ onRestart called ----------")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Timber.i("---------- on Resume called --------------")
+    }
+
+    override fun onPause() {
+//        blocks ui from drawing
+        super.onPause()
+        Timber.i("---------- on Pause called --------------")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Timber.i("---------- onStop called --------------")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Timber.i("---------- onDestroy called --------------")
     }
 }
