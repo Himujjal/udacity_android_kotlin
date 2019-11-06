@@ -47,6 +47,4 @@ abstract class SleepDatabase: RoomDatabase() {
             }
         }
     }
-
-
 }
